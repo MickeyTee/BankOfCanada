@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<title>USD/CAD FX Rate and CORRA Comparison Tool</title>
+<body>
+
+<h1>USD/CAD FX Rate and CORRA Comparison Tool</h1>
+
+This tool retrieves some summary statistics on the CORRA rate and the USD/CAD exchange rate from the Bank of Canada.<br>
+Note that data may not be available for all date ranges and that the start date must be on or before the end date<br>
+Enter dates and click "Get Statistics" to start using the tool.<br><br>
+Please enter the first date to be retrieved in the format YYYY-MM-DD:<br>
+<input id="startDate" value="2000-01-01">
+<br>
+Please enter the last date to be retrieved in the format YYYY-MM-DD:<br>
+<input id="endDate" value="2020-10-27">
+<br>
+<button onclick="callFlask()">Get Statistics</button>
+<br><br>
+<table style="border:1px solid; width: 400px;">
+    <thead>
+    <th></th>
+    <th>AVG.INTWO</th>
+    <th>FXUSDCAD</th>
+    </thead>
+    <tr><td>Data Begins</td><td id="intwoFirst"></td><td id="fxFirst"></td></td></tr>
+    <tr><td>Data Ends</td><td id="intwoLast"></td><td id="fxLast"></td></tr>
+    <tr><td>Low</td><td id="intwoLow"></td><td id="fxLow"></td></tr>
+    <tr><td>High</td><td id="intwoHigh"></td><td id="fxHigh"></td></tr>
+    <tr><td>Mean</td><td id="intwoMean"></td><td id="fxMean"></td></tr>
+    <tr><td>Correlation</td><td style="text-align:center; border: 1px solid black;" id="rho" colspan="2"></td></tr>
+
+</table>
+<p id="message"></p>
+<script>
+    function callFlask() {
+		// Create a new request variable
+		var request = new XMLHttpRequest
+
+
+		// Open a new connection and use the GET request, setting async to true
+		request.open('POST', 'http://127.0.0.1:5000/', true)
+		// Set the header so that Flask functions know what to do
+        //request.setRequestHeader('Content-Type', 'application/json')
+
+		// Specify what to do on load
+		request.onload = function() {
+			// Convert the response to a JavaScript object
+
+			var data = JSON.parse(request.response)
+
+			// Check for a bad request
+			if (request.status == 200){
+			    // Update the values for CORRA
+			    document.getElementById("intwoLow").innerHTML = data["AVG.INTWO"].low
+                document.getElementById("intwoHigh").innerHTML = data["AVG.INTWO"].high
+                document.getElementById("intwoMean").innerHTML = data["AVG.INTWO"].mean
+                document.getElementById("intwoFirst").innerHTML = data["AVG.INTWO"].mindate
+                document.getElementById("intwoLast").innerHTML = data["AVG.INTWO"].maxdate
+
+                // Update for USD CAD FX Rate
+                document.getElementById("fxLow").innerHTML = data.FXUSDCAD.low
+                document.getElementById("fxHigh").innerHTML = data.FXUSDCAD.high
+                document.getElementById("fxMean").innerHTML = data.FXUSDCAD.mean
+                document.getElementById("fxFirst").innerHTML = data.FXUSDCAD.mindate
+                document.getElementById("fxLast").innerHTML = data.FXUSDCAD.maxdate
+
+                // Update for the Pearson Correlation
+                document.getElementById("rho").innerHTML = data.rho
+                // Update the message
+                document.getElementById("message").innerHTML = data.message
+
+			} else {
+			    document.getElementById("message").innerHTML = "The application could not be contacted."
+			}
+
+		}
+
+		//Create a startDate variable from what was entered in the GUI
+		var startDate = document.getElementById("startDate").value
+
+		//Do the same with end dates
+		var endDate = document.getElementById("endDate").value
+
+		//Include them in an JSON object
+        var params = JSON.stringify({ "startDate": startDate, "endDate": endDate })
+
+		// Send the request with the parameters
+		request.send(params)
+
+    }
+</script>
+</body>
+</html>
